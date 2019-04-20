@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "441063320110",
+    "firebase_url": "https://tpdmu3practicas.firebaseio.com",
+    "project_id": "tpdmu3practicas",
+    "storage_bucket": "tpdmu3practicas.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441063320110:android:8bf891af28734904",
+        "android_client_info": {
+          "package_name": "com.example.tpdm_u3_practica1_vallejo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "441063320110-fqbpod2q5u6i9g7u3b09lio6b525utc8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwDI9Z5NFSsR8V-Tl20QyaISaOjSm5KiI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "441063320110-fqbpod2q5u6i9g7u3b09lio6b525utc8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441063320110:android:5fb9b250a9d6163f",
+        "android_client_info": {
+          "package_name": "com.example.tpdm_u3_practica2_vallejo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "441063320110-fqbpod2q5u6i9g7u3b09lio6b525utc8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwDI9Z5NFSsR8V-Tl20QyaISaOjSm5KiI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "441063320110-fqbpod2q5u6i9g7u3b09lio6b525utc8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
