@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -35,15 +36,18 @@ import java.util.Map;
 public class AutosActivity extends AppCompatActivity {
      Button agregarMarca, eliminarMarca,
         agregarModelo, eliminarModelo, buscarModelo;
-     EditText modelo;
+     EditText nombreModelo, fechaModelo;
+     CheckBox disponibleModelo;
      Spinner spinnerMarcas;
     ListView listViewModelos;
     FirebaseFirestore servicioBaseDatos;
-    List todoslosModelos;
+    //List todoslosModelos;
+    List<Modelo> modelos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_autos);
+
 
         agregarMarca = findViewById(R.id.insertarMarcaAuto);
         eliminarMarca = findViewById(R.id.eliminarMarcaAuto);
@@ -51,7 +55,9 @@ public class AutosActivity extends AppCompatActivity {
         eliminarModelo = findViewById(R.id.eliminarModeloAuto);
         buscarModelo = findViewById(R.id.btnBuscarModelo);
 
-        modelo = findViewById(R.id.editTextModeloAuto);
+        nombreModelo = findViewById(R.id.nombreModeloAuto);
+        fechaModelo = findViewById(R.id.fechaModeloAuto);
+        disponibleModelo = findViewById(R.id.disponibleModeloAuto);
 
         spinnerMarcas = findViewById(R.id.marcasAuto);
 
@@ -66,7 +72,9 @@ public class AutosActivity extends AppCompatActivity {
         spinnerMarcas.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                nombreModelo.setText(""); fechaModelo.setText(""); disponibleModelo.setChecked(false);
                 consultarModelos();
+
             }
 
             @Override
@@ -113,7 +121,9 @@ public class AutosActivity extends AppCompatActivity {
         listViewModelos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                modelo.setText(todoslosModelos.get(position).toString());
+                nombreModelo.setText(modelos.get(position).Nombre);
+                fechaModelo.setText(modelos.get(position).Fecha);
+                disponibleModelo.setChecked(modelos.get(position).Disponible);
             }
         });
     }
@@ -127,9 +137,11 @@ public class AutosActivity extends AppCompatActivity {
                 .setPositiveButton("BUSCAR", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        for (int i = 0; i<todoslosModelos.size(); i++){
-                            if(todoslosModelos.get(i).equals(modeloAbuscar.getText().toString())){
-                                modelo.setText(todoslosModelos.get(i).toString());
+                        for (int i = 0; i<modelos.size(); i++){
+                            if(modelos.get(i).Nombre.equals(modeloAbuscar.getText().toString())){
+                                nombreModelo.setText(modelos.get(i).Nombre);
+                                fechaModelo.setText(modelos.get(i).Fecha);
+                                disponibleModelo.setChecked(modelos.get(i).Disponible);
                                 return;
                             }
                         }
@@ -184,13 +196,17 @@ public class AutosActivity extends AppCompatActivity {
     }
 
     private void funcionAgregarModelo() {
-
-        Map<String,Object> myMap = new HashMap<>();
+        if (nombreModelo.getText().toString().equals("") || nombreModelo.getText().toString().equals(null)) {
+            mensaje("INGRESA MODELO VALIDO");
+            return;
+        }
+        Modelo nuevoModelo = new Modelo(nombreModelo.getText().toString(), fechaModelo.getText().toString(), disponibleModelo.isChecked());
+        //Map<String,Object> myMap = new HashMap<>();
         servicioBaseDatos.collection("Autos")
                 .document(spinnerMarcas.getSelectedItem().toString())
                 .collection("Modelos")
-                .document(modelo.getText().toString())
-                .set(myMap)
+                .document(nuevoModelo.Nombre)
+                .set(nuevoModelo)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -204,6 +220,7 @@ public class AutosActivity extends AppCompatActivity {
                         mensaje("ERROR AL AGREGAR MODELO");
                     }
                 });
+        nombreModelo.setText(""); fechaModelo.setText(""); disponibleModelo.setChecked(false);
     }
 
     private void funcionEliminarMarca() {
@@ -298,14 +315,22 @@ public class AutosActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            todoslosModelos = new ArrayList<>();
+                            //todoslosModelos = new ArrayList<>();
+                            modelos = new ArrayList<>();
                             for(QueryDocumentSnapshot document: task.getResult()){
-                                todoslosModelos.add(document.getId());
+                                Map<String, Object> datos = document.getData();
+                                modelos.add(new Modelo(document.getId(), datos.get("Fecha").toString(), (boolean)datos.get("Disponible")));
+
+
+                                //todoslosModelos.add(document.getId());
                                 //Toast.makeText(AutosActivity.this,document.getId(), Toast.LENGTH_SHORT).show();
                             }
-
+                            String [] modelosArray = new String[modelos.size()];
+                            for(int i = 0; i<modelos.size(); i++){
+                                modelosArray[i] = modelos.get(i).Nombre;
+                            }
                             ArrayAdapter<String> adapter = new ArrayAdapter<>(AutosActivity.this,
-                                    android.R.layout.simple_list_item_1, todoslosModelos);
+                                    android.R.layout.simple_list_item_1, modelosArray);
                             listViewModelos.setAdapter(adapter);
                         }else {
                             Toast.makeText(AutosActivity.this,"No hay modelos", Toast.LENGTH_SHORT).show();

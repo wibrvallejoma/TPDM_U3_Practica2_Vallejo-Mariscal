@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -22,7 +23,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +34,13 @@ import java.util.Map;
 public class MotocicletasActivity extends AppCompatActivity {
     Button agregarMarca, eliminarMarca,
             agregarModelo, eliminarModelo, buscarModelo;
-    EditText modelo;
+    EditText nombreModelo, fechaModelo;
+    CheckBox disponibleModelo;
     Spinner spinnerMarcas;
     ListView listViewModelos;
     FirebaseFirestore servicioBaseDatos;
-    List todoslosModelos;
+    //List todoslosModelos;
+    List<Modelo> modelos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +52,9 @@ public class MotocicletasActivity extends AppCompatActivity {
         eliminarModelo = findViewById(R.id.eliminarModeloMoto);
         buscarModelo = findViewById(R.id.btnBuscarModeloMoto);
 
-        modelo = findViewById(R.id.editTextModeloMoto);
+        nombreModelo = findViewById(R.id.nombreModeloMoto);
+        fechaModelo = findViewById(R.id.fechaModeloMoto);
+        disponibleModelo = findViewById(R.id.disponibleModeloMoto);
 
         spinnerMarcas = findViewById(R.id.marcasMoto);
 
@@ -61,6 +69,7 @@ public class MotocicletasActivity extends AppCompatActivity {
         spinnerMarcas.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                nombreModelo.setText(""); fechaModelo.setText(""); disponibleModelo.setChecked(false);
                 consultarModelos();
             }
 
@@ -108,7 +117,9 @@ public class MotocicletasActivity extends AppCompatActivity {
         listViewModelos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                modelo.setText(todoslosModelos.get(position).toString());
+                nombreModelo.setText(modelos.get(position).Nombre);
+                fechaModelo.setText(modelos.get(position).Fecha);
+                disponibleModelo.setChecked(modelos.get(position).Disponible);
             }
         });
     }
@@ -124,9 +135,11 @@ public class MotocicletasActivity extends AppCompatActivity {
                 .setPositiveButton("BUSCAR", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        for (int i = 0; i<todoslosModelos.size(); i++){
-                            if(todoslosModelos.get(i).equals(modeloAbuscar.getText().toString())){
-                                modelo.setText(todoslosModelos.get(i).toString());
+                        for (int i = 0; i<modelos.size(); i++){
+                            if(modelos.get(i).Nombre.equals(modeloAbuscar.getText().toString())){
+                                nombreModelo.setText(modelos.get(i).Nombre);
+                                fechaModelo.setText(modelos.get(i).Fecha);
+                                disponibleModelo.setChecked(modelos.get(i).Disponible);
                                 return;
                             }
                         }
@@ -181,13 +194,17 @@ public class MotocicletasActivity extends AppCompatActivity {
     }
 
     private void funcionAgregarModelo() {
-
-        Map<String,Object> myMap = new HashMap<>();
+        if (nombreModelo.getText().toString().equals("") || nombreModelo.getText().toString().equals(null)) {
+            mensaje("INGRESA MODELO VALIDO");
+            return;
+        }
+        Modelo nuevoModelo = new Modelo(nombreModelo.getText().toString(), fechaModelo.getText().toString(), disponibleModelo.isChecked());
+        //Map<String,Object> myMap = new HashMap<>();
         servicioBaseDatos.collection("Motocicletas")
                 .document(spinnerMarcas.getSelectedItem().toString())
                 .collection("Modelos")
-                .document(modelo.getText().toString())
-                .set(myMap)
+                .document(nuevoModelo.Nombre)
+                .set(nuevoModelo)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -201,6 +218,7 @@ public class MotocicletasActivity extends AppCompatActivity {
                         mensaje("ERROR AL AGREGAR MODELO");
                     }
                 });
+        nombreModelo.setText(""); fechaModelo.setText(""); disponibleModelo.setChecked(false);
     }
 
     private void funcionEliminarMarca() {
@@ -295,14 +313,23 @@ public class MotocicletasActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            todoslosModelos = new ArrayList<>();
+                            //todoslosModelos = new ArrayList<>();
+                            modelos = new ArrayList<>();
                             for(QueryDocumentSnapshot document: task.getResult()){
-                                todoslosModelos.add(document.getId());
-                                //Toast.makeText(MotocicletasActivity.this,document.getId(), Toast.LENGTH_SHORT).show();
-                            }
+                                Map<String, Object> datos = document.getData();
+                                //DateFormat dateFormat = new SimpleDateFormat("dd/mm/yyyy");
+                                modelos.add(new Modelo(document.getId(), datos.get("Fecha").toString(), (boolean)datos.get("Disponible")));
 
+
+                                //todoslosModelos.add(document.getId());
+                                //Toast.makeText(AutosActivity.this,document.getId(), Toast.LENGTH_SHORT).show();
+                            }
+                            String [] modelosArray = new String[modelos.size()];
+                            for(int i = 0; i<modelos.size(); i++){
+                                modelosArray[i] = modelos.get(i).Nombre;
+                            }
                             ArrayAdapter<String> adapter = new ArrayAdapter<>(MotocicletasActivity.this,
-                                    android.R.layout.simple_list_item_1, todoslosModelos);
+                                    android.R.layout.simple_list_item_1, modelosArray);
                             listViewModelos.setAdapter(adapter);
                         }else {
                             Toast.makeText(MotocicletasActivity.this,"No hay modelos", Toast.LENGTH_SHORT).show();
